@@ -1,0 +1,743 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Claugineer</title>
+<style>
+:root{
+  --bg:#0f1214; --panel:#171b1f; --panel2:#1e2328; --line:#2a3138; --text:#e6e9ec; --dim:#8b949e;
+  --accent:#ff7a1a; --good:#39d98a; --bad:#ff5c5c; --warn:#ffc53d; --a:#35c7ff; --b:#ffab7a;
+  --mono: ui-monospace, "Cascadia Mono", Consolas, monospace;
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,Segoe UI,sans-serif}
+header{display:flex;align-items:center;gap:16px;padding:10px 16px;border-bottom:1px solid var(--line);
+  position:sticky;top:0;background:var(--bg);z-index:5;flex-wrap:wrap}
+header h1{font-size:16px;margin:0;letter-spacing:.06em}
+header h1 b{color:var(--accent)}
+select,button,input{background:var(--panel2);color:var(--text);border:1px solid var(--line);
+  border-radius:6px;padding:5px 8px;font:inherit}
+button{cursor:pointer} button:hover{border-color:var(--accent)}
+nav{display:flex;gap:4px;flex-wrap:wrap}
+nav button.on{background:var(--accent);color:#111;border-color:var(--accent);font-weight:600}
+main{padding:16px;max-width:1900px;margin:0 auto}
+main>.card,main>.grid,main>.cmpgrid{margin-top:12px}
+.sticky{position:sticky;top:52px;z-index:4;box-shadow:0 6px 14px rgba(0,0,0,.45)}
+.cmpgrid{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:12px;align-items:start}
+.cmpgrid .side{position:sticky;top:150px;display:grid;gap:12px}
+@media(max-width:1100px){.cmpgrid{grid-template-columns:1fr}.cmpgrid .side{position:static}}
+.zcard{padding:8px 10px;margin-bottom:10px}
+.zc canvas{cursor:crosshair;user-select:none}
+.zct{font-size:13px;color:var(--dim);text-transform:uppercase;letter-spacing:.06em;margin:0 0 4px 4px;font-weight:600}
+.prow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.plab{width:110px;color:var(--dim);font-size:13px}
+.chip{font:13px var(--mono);padding:4px 8px;border-radius:7px}
+.chip.inv{opacity:.55;font-style:italic} .chip.pb{border-color:var(--good)} .chip.pit{opacity:.4}
+.lapbadge{display:inline-flex;gap:6px;align-items:center;border:2px solid;border-radius:8px;padding:4px 10px;font:14px var(--mono)}
+.lapbadge i,.dot{display:inline-block;width:12px;height:12px;border-radius:50%;margin-right:4px;vertical-align:middle}
+#sess{max-width:min(100%,900px);text-overflow:ellipsis}
+.zbtn{font-weight:600} .zbtn.on{background:#ffc53d;color:#111;border-color:#ffc53d}
+table.ro td,table.ro th{padding:3px 6px;font:13px var(--mono)}
+table.ct td{font-size:13px} tr.clk{cursor:pointer} tr.clk:hover td{background:var(--panel2)}
+.habits{display:grid;grid-template-columns:repeat(auto-fit,minmax(330px,1fr));gap:10px 18px}
+.hab{display:grid;grid-template-columns:110px 1fr;gap:10px;align-items:start}
+.hbar{height:12px;background:var(--panel2);border-radius:6px;overflow:hidden;margin-top:6px}.hbar i{display:block;height:100%}
+table.mx td,table.mx th{text-align:center;font-size:13px} table.mx td:first-child,table.mx th:first-child{text-align:left}
+td.mxc{cursor:pointer;font-family:var(--mono)}
+#lmap{cursor:grab}
+.lmwrap{position:relative}.lmbtn{position:absolute;top:8px;right:8px;display:flex;flex-direction:column;gap:4px}
+.lmbtn button{width:34px;height:34px;font-size:18px;font-weight:700;padding:0;background:rgba(30,35,40,.9)}
+.lmhelp{position:absolute;bottom:6px;right:10px;font-size:12px;color:var(--dim);background:rgba(15,18,20,.7);padding:2px 6px;border-radius:4px}
+.notepop{position:fixed;z-index:50;width:370px;background:#1e2328;border:2px solid #c792ff;border-radius:10px;padding:10px 12px;box-shadow:0 10px 30px rgba(0,0,0,.6);display:grid;gap:8px}
+.notepop textarea{width:100%;background:#0f1214;color:var(--text);border:1px solid var(--line);border-radius:6px;padding:6px;font:inherit}
+.notepop .qk{display:flex;flex-wrap:wrap;gap:4px}.notepop .qk button{font-size:12px;padding:2px 7px}
+.notepop .pri{background:#c792ff;color:#111;border-color:#c792ff;font-weight:600}
+.note{border-left:3px solid #c792ff;padding:6px 8px;margin:6px 0;background:var(--panel2);border-radius:4px}
+.note.resolved{border-left-color:var(--good);opacity:.8} .clk{cursor:pointer} .tip{min-height:22px;margin-top:4px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.card h3{margin:0 0 8px;font-size:12px;color:var(--dim);text-transform:uppercase;letter-spacing:.08em;font-weight:600}
+.big{font:600 28px var(--mono)}
+.mono{font-family:var(--mono)}
+.dim{color:var(--dim)} .good{color:var(--good)} .bad{color:var(--bad)} .warn{color:var(--warn)}
+table{border-collapse:collapse;width:100%;font-size:13px}
+th,td{padding:4px 8px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+th{color:var(--dim);font-weight:600;position:sticky;top:0;background:var(--panel)}
+td:first-child,th:first-child{text-align:left}
+tr.out td{opacity:.45} tr.best td{color:var(--good)}
+.tablewrap{overflow:auto;max-height:520px}
+canvas{width:100%;display:block}
+.row{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.pill{display:inline-block;padding:1px 8px;border-radius:99px;font-size:12px;border:1px solid var(--line)}
+.pill.improving{color:var(--good);border-color:var(--good)} .pill.losing{color:var(--bad);border-color:var(--bad)}
+.pill.flat{color:var(--dim)}
+.corner{display:grid;grid-template-columns:minmax(260px,1fr) minmax(260px,1.2fr);gap:14px}
+@media(max-width:800px){.corner{grid-template-columns:1fr}}
+ul{margin:4px 0;padding-left:18px} li{margin:2px 0}
+.issue{color:var(--warn)}
+.rec{border-left:3px solid var(--accent);padding:6px 10px;margin:8px 0;background:var(--panel2);border-radius:4px}
+.rec b{color:var(--accent)}
+.tyre{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+.tw{background:var(--panel2);border-radius:8px;padding:8px;text-align:center}
+.tw .io{display:flex;justify-content:space-between;font:12px var(--mono)}
+.hidden{display:none}
+.legend span{margin-right:12px;font-size:12px}
+.legend i{display:inline-block;width:14px;height:3px;vertical-align:middle;margin-right:4px}
+</style>
+</head>
+<body>
+<header>
+  <h1>CLAU<b>GINEER</b></h1>
+  <select id="sess"></select>
+  <nav id="tabs"></nav>
+  <span id="stat" class="dim" style="margin-left:auto"></span>
+</header>
+<main id="main"></main>
+
+<script>
+const TABS=["Live","Session","Compare","Habits","Corners","Technique","Setup"];
+let tab=localStorage.getItem("tab")||"Session", A=null, SID=null, liveTimer=null;
+const $=s=>document.querySelector(s);
+const fmt=t=>{if(t==null||t<=0)return"-";const m=Math.floor(t/60);return m+":"+(t-60*m).toFixed(3).padStart(6,"0")};
+const f=(x,n=2)=>x==null?"-":Number(x).toFixed(n);
+const sgn=(x,n=3)=>x==null?"-":(x>0?"+":"")+Number(x).toFixed(n);
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+async function J(u,opt){const r=await fetch(u,opt);return r.json()}
+function post(u,b){return J(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)})}
+
+// ------------------------------------------------------------- tiny chart
+function chart(cv,o){
+  const dpr=window.devicePixelRatio||1,W=cv.clientWidth,H=o.h||180;
+  cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+"px";
+  const c=cv.getContext("2d");c.scale(dpr,dpr);
+  const pl=48,pr=10,pt=10,pb=22,w=W-pl-pr,h=H-pt-pb;
+  let xs=o.x, ymin=Infinity,ymax=-Infinity;
+  o.series.forEach(s=>s.y.forEach(v=>{if(v!=null&&isFinite(v)){ymin=Math.min(ymin,v);ymax=Math.max(ymax,v)}}));
+  if(o.ymin!=null)ymin=o.ymin; if(o.ymax!=null)ymax=o.ymax;
+  if(!isFinite(ymin)){return}
+  if(ymax===ymin){ymax+=1;ymin-=1}
+  const pad=(ymax-ymin)*0.06;ymin-=o.ymin!=null?0:pad;ymax+=o.ymax!=null?0:pad;
+  const x0=Math.min(...xs),x1=Math.max(...xs);
+  const X=v=>pl+(v-x0)/(x1-x0||1)*w, Y=v=>pt+h-(v-ymin)/(ymax-ymin)*h;
+  c.strokeStyle=css("--line");c.fillStyle=css("--dim");c.font="11px system-ui";c.lineWidth=1;
+  for(let i=0;i<=4;i++){const v=ymin+(ymax-ymin)*i/4,y=Y(v);c.beginPath();c.moveTo(pl,y);c.lineTo(W-pr,y);c.stroke();
+    c.fillText(o.yfmt?o.yfmt(v):v.toFixed(Math.abs(ymax-ymin)<3?2:0),2,y+4)}
+  (o.markers||[]).forEach(m=>{const x=X(m.x);c.strokeStyle="rgba(255,122,26,.35)";c.setLineDash([3,3]);
+    c.beginPath();c.moveTo(x,pt);c.lineTo(x,pt+h);c.stroke();c.setLineDash([]);c.fillStyle=css("--accent");c.fillText(m.label,x+3,pt+10)});
+  if(o.zero&&ymin<0&&ymax>0){c.strokeStyle=css("--dim");c.beginPath();c.moveTo(pl,Y(0));c.lineTo(W-pr,Y(0));c.stroke()}
+  o.series.forEach(s=>{c.strokeStyle=s.color;c.fillStyle=s.color;c.lineWidth=s.width||1.6;
+    if(s.dash)c.setLineDash(s.dash);
+    if(s.dots){s.y.forEach((v,i)=>{if(v==null)return;c.beginPath();c.arc(X(xs[i]),Y(v),s.r||3,0,7);
+      (s.hollow&&s.hollow[i])?c.stroke():c.fill()})}
+    else{c.beginPath();let on=false;s.y.forEach((v,i)=>{if(v==null){on=false;return}
+      on?c.lineTo(X(xs[i]),Y(v)):c.moveTo(X(xs[i]),Y(v));on=true});c.stroke()}
+    c.setLineDash([])});
+  c.fillStyle=css("--dim");
+  const ticks=o.xticks||5;for(let i=0;i<=ticks;i++){const v=x0+(x1-x0)*i/ticks;c.fillText(o.xfmt?o.xfmt(v):Math.round(v),Math.min(X(v)-10,W-pr-34),H-6)}
+  if(o.title){c.fillStyle=css("--text");c.fillText(o.title,pl+4,pt+10)}
+}
+const legend=items=>`<div class="legend">${items.map(([c,t])=>`<span><i style="background:${c}"></i>${t}</span>`).join("")}</div>`;
+function trendLine(ys){ // Theil-Sen line for display
+  const p=ys.map((y,i)=>[i,y]).filter(q=>q[1]!=null),s=[];
+  for(let a=0;a<p.length;a++)for(let b=a+1;b<p.length;b++)s.push((p[b][1]-p[a][1])/(p[b][0]-p[a][0]));
+  if(!s.length)return ys.map(()=>null);s.sort((a,b)=>a-b);const m=s[s.length>>1];
+  const ic=p.map(q=>q[1]-m*q[0]).sort((a,b)=>a-b)[p.length>>1];return ys.map((_,i)=>ic+m*i)}
+function rollMed(ys,k=5){return ys.map((_,i)=>{const w=ys.slice(Math.max(0,i-k+1),i+1).filter(v=>v!=null).sort((a,b)=>a-b);return w.length?w[w.length>>1]:null})}
+
+// ------------------------------------------------------------- shell
+function tabs(){ $("#tabs").innerHTML=TABS.map(t=>`<button class="${t==tab?"on":""}" onclick="go('${t}')">${t}</button>`).join("") }
+function go(t){tab=t;localStorage.setItem("tab",t);tabs();render()}
+async function loadSessions(){
+  const ss=(await J("/api/sessions")).filter(s=>s.laps>0&&s.track);
+  $("#sess").innerHTML=ss.map(s=>`<option value="${s.id}">${s.started||""} · ${s.track} ${s.variation} · ${s.car} · ${s.type} · ${s.laps} laps · ${fmt(s.best)}</option>`).join("");
+  if(!SID||!ss.find(s=>s.id==SID))SID=ss.length?ss[0].id:null;
+  $("#sess").value=SID;
+}
+$("#sess").onchange=async e=>{SID=e.target.value;CL=null;if(tab=="Compare"){CMP.sel=[];CMP.zoom=null}await loadA();render()};
+async function loadA(rebuild){A=SID?await J(`/api/analysis?sid=${encodeURIComponent(SID)}${rebuild?"&rebuild=1":""}`):null}
+async function poll(){
+  try{const s=await J("/api/status");$("#stat").textContent=s.status+(s.lap?` · lap ${s.lap}`:"");
+    if(tab=="Live")renderLive(s);
+    if(s.session&&s.session!==lastLiveSession){lastLiveSession=s.session;await loadSessions();}
+    if(s.session&&s.session==SID&&s.last!==lastLast){const first=lastLast===null;lastLast=s.last;
+      if(!first){await loadA();CL=null;if(tab!="Live"&&tab!="Compare")render()}}
+  }catch(e){$("#stat").textContent="app not running"}
+}
+let lastLast=null,lastLiveSession=null;
+
+function render(){
+  const m=$("#main");
+  if(tab=="Live"){m.innerHTML=liveHTML();return}
+  if(tab=="Compare"||tab=="Habits"){(tab=="Compare"?rCompare:rHabits)().catch(e=>{m.innerHTML=`<div class="card bad">Could not build this view: ${e}</div>`});return}
+  if(tab!="Compare"&&tab!="Habits")setHash({tab});
+  if(!A||!A.laps||!A.laps.length){m.innerHTML=`<div class="card">No laps analysed yet for this session. Drive a few laps (or run <span class="mono">sim.bat</span> for a demo). Compare and Habits use every session at this track.</div>`;return}
+  ({Session:rSession,Corners:rCorners,Technique:rTech,Setup:rSetup})[tab]();
+}
+
+// ------------------------------------------------------------- LIVE
+function liveHTML(){return `<div class="grid">
+ <div class="card"><h3>Delta to best</h3><div class="big" id="l_delta">-</div><div class="dim" id="l_ref"></div></div>
+ <div class="card"><h3>Current</h3><div class="big" id="l_cur">-</div><div class="dim" id="l_lap"></div></div>
+ <div class="card"><h3>Last</h3><div class="big" id="l_last">-</div></div>
+ <div class="card"><h3>Best</h3><div class="big" id="l_best">-</div></div>
+ <div class="card"><h3>Speed / gear</h3><div class="big" id="l_spd">-</div><div class="dim" id="l_fuel"></div></div>
+</div><div class="card" style="margin-top:12px"><h3>Tyres (inner | mid | outer °C, hot pressure, carcass, brake)</h3><div class="tyre" id="l_tyres"></div></div>
+<p class="dim">The Live tab is for a second screen or phone. You don't need it in VR - everything is recorded and analysed after each lap.</p>`}
+function renderLive(s){
+  if(!$("#l_cur"))return;
+  const d=s.delta;$("#l_delta").textContent=d==null?"-":sgn(d,2);$("#l_delta").className="big "+(d==null?"":d<0?"good":"bad");
+  $("#l_ref").textContent=s.ref_lap?`vs lap ${s.ref_lap}`:"";
+  $("#l_cur").textContent=fmt(s.cur);$("#l_lap").textContent=s.lap?`lap ${s.lap}${s.invalid?" · INVALID":""}`:"";
+  $("#l_last").textContent=fmt(s.last);$("#l_best").textContent=fmt(s.best);
+  $("#l_spd").textContent=s.speed!=null?`${Math.round(s.speed)} · ${s.gear}`:"-";
+  $("#l_fuel").textContent=s.fuel_l!=null?`fuel ${f(s.fuel_l,1)} L · bias ${f(s.brake_bias*100,1)}%`:"";
+  if(s.tyres)$("#l_tyres").innerHTML=["FL","FR","RL","RR"].map(w=>{const t=s.tyres[w];
+    return `<div class="tw"><b>${w}</b><div class="io"><span>${f(t.inner,0)}</span><span>${f(t.middle,0)}</span><span>${f(t.outer,0)}</span></div>
+    <div class="mono">${f(t.pressure,2)} bar · ${f(t.carcass,0)}° · brk ${f(t.brake,0)}°</div></div>`}).join("");
+}
+
+// ------------------------------------------------------------- SESSION
+function rSession(){
+  const s=A.session,lt=A.lap_trend,st=A.setup||{};
+  const clean=A.laps.filter(l=>l.valid&&!l.pit);
+  const out=new Set(lt.outlier_laps||[]);
+  $("#main").innerHTML=`
+  <div class="grid">
+   <div class="card"><h3>Best lap</h3><div class="big">${fmt(A.best_time)}</div><div class="dim">lap ${A.best_lap}</div></div>
+   <div class="card"><h3>Theoretical (corners)</h3><div class="big">${fmt(A.theoretical_corners)}</div><div class="dim">sectors ${fmt(A.theoretical_sectors)}</div></div>
+   <div class="card"><h3>Typical (median last 5)</h3><div class="big">${fmt(lt.recent_median)}</div><div class="dim">robust spread ±${f(lt.robust_sd,3)} s</div></div>
+   <div class="card"><h3>Trend</h3><div class="big"><span class="pill ${lt.direction}">${lt.direction||"-"}</span></div><div class="dim">${sgn(lt.slope_per_lap)} s/lap</div></div>
+   <div class="card"><h3>Focus now</h3><div><b>${st.phase=="setup"?"Setup":"Driving"}</b></div><div class="dim">${st.phase_note||""}</div></div>
+  </div>
+  <div class="card" style="margin-top:12px"><h3>Lap times · dots = laps (hollow = outlier) · line = rolling median · dashed = trend</h3>
+   <canvas id="c_laps"></canvas>${legend([[css("--a"),"lap"],[css("--accent"),"rolling median (5)"],[css("--dim"),"trend"]])}</div>
+  <div class="card" style="margin-top:12px"><h3>Next run</h3>${planHTML()}</div>
+  <div class="card" style="margin-top:12px"><h3>Laps</h3><div class="tablewrap"><table>
+   <tr><th>Lap</th><th>Run</th><th>Time</th><th>S1</th><th>S2</th><th>S3</th><th>Coast m</th><th>Lockups</th><th>Spin m</th><th>Lifts</th><th>Trail %</th><th>Top km/h</th><th>Fuel L</th><th></th></tr>
+   ${A.laps.map(l=>{const t=l.technique,sc=l.sectors||[];const bs=A.best_sectors||[];
+     return `<tr class="${l.lap==A.best_lap?"best":""} ${out.has(l.lap)||!l.valid||l.pit?"out":""}"><td>${l.lap}</td><td>${l.run}</td><td class="mono">${fmt(l.time)}</td>
+     ${[0,1,2].map(i=>`<td class="mono ${sc[i]!=null&&sc[i]==bs[i]?"good":""}">${f(sc[i],3)}</td>`).join("")}
+     <td>${f(t.coast_m,0)}</td><td>${t.lockups}</td><td>${f(t.wheelspin_m,0)}</td><td>${t.lifts}</td><td>${f(t.trail_pct,0)}</td><td>${f(t.top_speed,0)}</td><td>${f(l.fuel_used,2)}</td>
+     <td class="dim">${l.pit?"pit":!l.valid?"invalid":out.has(l.lap)?"outlier":""}</td></tr>`}).join("")}
+  </table></div></div>
+  <div class="row" style="margin-top:12px"><button onclick="rebuild()">Re-analyse</button><button onclick="rebuild(true)">Re-detect corners</button>
+   <a class="dim" href="/api/brief?sid=${encodeURIComponent(SID)}" target="_blank">brief.md</a></div>`;
+  const ys=clean.map(l=>l.time);
+  chart($("#c_laps"),{x:clean.map(l=>l.lap),h:220,yfmt:fmt,series:[
+    {y:ys,color:css("--a"),dots:true,hollow:clean.map(l=>out.has(l.lap))},
+    {y:rollMed(ys),color:css("--accent"),width:2},
+    {y:trendLine(ys),color:css("--dim"),dash:[6,4]}]});
+}
+function planHTML(){const p=A.plan||{};return `<ol>${(p.focus||[]).map(x=>`<li><b>${x.corner}</b> <span class="dim">(${f(x.potential_s,3)} s, ${x.trend})</span> — ${x.action}</li>`).join("")}</ol>
+  <div><b>One change:</b> ${p.one_change||"-"}</div>`}
+async function rebuild(remap){A=await post("/api/rebuild",{sid:SID,remap:!!remap});render()}
+
+// ------------------------------------------------------------- CORNERS
+function rCorners(){
+  const clean=A.laps.filter(l=>l.valid&&!l.pit);
+  const tm=A.track_map||{};
+  let h=`<div class="card"><h3>Track map · corners ranked by time you're leaving vs your own robust best</h3><canvas id="c_map"></canvas></div>`;
+  A.corners.forEach((c,i)=>{const tr=c.trend,tm=c.typical_metrics||{},fv=c.fast_vs_slow;
+    h+=`<div class="card" style="margin-top:12px"><div class="row" style="justify-content:space-between">
+      <div><input value="${c.name}" style="width:140px;font-weight:600" onchange="renameCorner('${c.id}',this.value)"> <span class="dim">${c.id} · apex ${Math.round(c.apex_m)} m</span></div>
+      <div><span class="pill ${tr.direction}">${tr.direction||"-"} ${sgn(tr.slope_per_lap)} s/lap</span> <span class="mono">potential ${f(c.potential,3)} s</span></div></div>
+      <div class="corner"><div><canvas id="c_c${i}"></canvas><div class="dim">typical ${f(c.typical,3)} · robust best ${f(c.robust_best,3)} · best ${f(c.best,3)} ${tr.outlier_laps&&tr.outlier_laps.length?`· outliers: laps ${tr.outlier_laps.join(", ")}`:""}</div></div>
+      <div><table>
+       ${tm.braking?`<tr><td>Brake point</td><td>${f(-tm.brake_m,0)} m before apex @ ${f(tm.brake_speed,0)} km/h</td></tr>
+       <tr><td>Brake peak / ramp</td><td>${f(tm.brake_peak*100,0)}% / ${f(tm.brake_ramp_s,2)} s</td></tr>
+       <tr><td>Release</td><td>${tm.release_style||"-"} · trail ${f(tm.trail_m,0)} m</td></tr>`:`<tr><td>Lift</td><td>${tm.lift_m!=null?f(-tm.lift_m,0)+" m before apex":"flat"}</td></tr>`}
+       <tr><td>Min speed</td><td>${f(tm.min_speed,1)} km/h</td></tr>
+       <tr><td>Throttle on / full</td><td>${f(tm.throttle_on_m,0)} / ${f(tm.full_throttle_m,0)} m after apex</td></tr>
+       <tr><td>Coasting</td><td>${f(tm.coast_m,0)} m</td></tr>
+       <tr><td>Exit speed</td><td>${f(tm.exit_speed,1)} km/h</td></tr>
+       <tr><td>Balance entry/mid/exit</td><td>${sgn(tm.bal_entry,2)} / ${sgn(tm.bal_mid,2)} / ${sgn(tm.bal_exit,2)} <span class="dim">(+ = understeer)</span></td></tr>
+      </table>
+      ${(c.issues||[]).map(x=>`<div class="issue">⚠ ${x.text}</div>`).join("")}
+      ${fv&&fv.insights.length?`<div style="margin-top:6px"><b>Your fast laps (${fv.fast_laps.join(", ")}) vs slow (${fv.slow_laps.join(", ")}), ${f(fv.time_gap,3)} s apart:</b><ul>${fv.insights.map(x=>`<li>${x}</li>`).join("")}</ul></div>`:""}
+      </div></div></div>`});
+  $("#main").innerHTML=h;
+  A.corners.forEach((c,i)=>{const ys=clean.map(l=>{const lc=A.lap_corners[l.lap]||{};return lc[c.id]?lc[c.id].time:null});
+    chart($("#c_c"+i),{x:clean.map(l=>l.lap),h:150,series:[{y:ys,color:css("--a"),dots:true,hollow:clean.map(l=>(c.trend.outlier_laps||[]).includes(l.lap))},
+      {y:rollMed(ys),color:css("--accent"),width:2},{y:trendLine(ys),color:css("--dim"),dash:[6,4]}],yfmt:v=>v.toFixed(2)})});
+  drawCornerMap($("#c_map"),tm);
+}
+async function renameCorner(id,name){A=await post("/api/rename_corner",{sid:SID,id,name})}
+function drawCornerMap(cv,tm){   // was drawMap(cv,tm): clashed with the Compare drawMap() and never ran
+  if(!tm.map||!tm.map.x)return;const xs=tm.map.x,zs=tm.map.z,L=A.session.track_length;
+  const dpr=devicePixelRatio||1,W=cv.clientWidth,H=320;cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+"px";
+  const c=cv.getContext("2d");c.scale(dpr,dpr);
+  const mnx=Math.min(...xs),mxx=Math.max(...xs),mnz=Math.min(...zs),mxz=Math.max(...zs);
+  const sc=Math.min((W-40)/(mxx-mnx||1),(H-40)/(mxz-mnz||1));
+  // same orientation as the Compare map (x mirrored, z down) so both read like the game map
+  const P=i=>[W-(20+(xs[i]-mnx)*sc+((W-40)-(mxx-mnx)*sc)/2), 20+(zs[i]-mnz)*sc+((H-40)-(mxz-mnz)*sc)/2];
+  c.strokeStyle=css("--dim");c.lineWidth=3;c.beginPath();xs.forEach((_,i)=>{const[p,q]=P(i);i?c.lineTo(p,q):c.moveTo(p,q)});c.stroke();
+  const pot=Math.max(...A.corners.map(c=>c.potential||0),0.001);
+  const pl=[],lab=[];A.corners.forEach(cn=>{const i=Math.min(xs.length-1,Math.round(cn.apex_m/10));const[p,q]=P(i);
+    const r=6+14*(cn.potential||0)/pot;c.fillStyle=`rgba(255,122,26,${0.25+0.6*(cn.potential||0)/pot})`;
+    c.beginPath();c.arc(p,q,r,0,7);c.fill();pl.push([p-r,q-r,p+r,q+r]);lab.push([cn,p,q,r])});
+  c.fillStyle=css("--text");c.font="bold 12px system-ui";lab.forEach(([cn,p,q,r])=>putLabel(c,cLab(cn),p,q,pl,W/2,H/2,W,H,r));
+  drawLandmarks(c,tm.landmarks,dm=>{const i=Math.min(xs.length-1,Math.round(dm/10));return P(i)});
+  const[p0,q0]=P(0);c.fillStyle=css("--good");c.fillRect(p0-3,q0-3,6,6);
+}
+
+// ------------------------------------------------------------- zoomable, linked charts
+// Drag across any chart to zoom (all charts in the group follow), double-click to reset,
+// hover for a crosshair + values. Y axis re-scales to what is visible.
+const LAPCOL=["#35c7ff","#ffab7a","#5be37d","#c792ff"];
+class ZGroup{
+  constructor(x){this.x=x;this.full=[x[0],x[x.length-1]];this.r=[...this.full];this.hover=null;this.charts=[];this.listeners=[]}
+  set(a,b){if(b-a<20){const m=(a+b)/2;a=m-10;b=m+10}this.r=[Math.max(this.full[0],a),Math.min(this.full[1],b)];this.draw()}
+  reset(){this.r=[...this.full];this.draw()}
+  setHover(x){this.hover=x;this.draw(true)}
+  draw(hoverOnly){this.charts.forEach(c=>c.draw());this.listeners.forEach(f=>f(hoverOnly))}
+  i0(){return Math.max(0,bisect(this.x,this.r[0])-1)} i1(){return Math.min(this.x.length-1,bisect(this.x,this.r[1])+1)}
+}
+function bisect(a,v){let lo=0,hi=a.length;while(lo<hi){const m=(lo+hi)>>1;a[m]<v?lo=m+1:hi=m}return lo}
+class ZChart{
+  // o: {group, h, series:[{y,color,width,dash,label}], title, yfmt, zero, ymin, ymax, markers, unit, step}
+  constructor(el,o){this.o=o;this.g=o.group;this.g.charts.push(this);
+    el.innerHTML=`<div class="zc"><div class="zct">${o.title||""}</div><canvas></canvas></div>`;
+    this.cv=el.querySelector("canvas");this.drag=null;const cv=this.cv;
+    const xAt=e=>{const r=cv.getBoundingClientRect(),px=e.clientX-r.left;return this.r0+(px-this.pl)/(this.w||1)*(this.r1-this.r0)};
+    cv.addEventListener("mousedown",e=>{this.drag={a:xAt(e),px:e.clientX};e.preventDefault()});
+    cv.addEventListener("mousemove",e=>{const x=xAt(e);if(this.drag){this.drag.b=x;this.draw()}this.g.setHover(x)});
+    cv.addEventListener("mouseleave",()=>{this.g.setHover(null)});
+    addEventListener("mouseup",e=>{if(!this.drag)return;const d=this.drag;this.drag=null;
+      if(d.b!=null&&Math.abs(e.clientX-d.px)>8)this.g.set(Math.min(d.a,d.b),Math.max(d.a,d.b));
+      else{this.draw();if(this.o.onClick&&e.target===cv)this.o.onClick(d.a,e)}});
+    cv.addEventListener("dblclick",()=>this.g.reset());
+    cv.addEventListener("touchmove",e=>{const t=e.touches[0];this.g.setHover(xAt(t))},{passive:true});
+    this.draw()}
+  draw(){
+    const o=this.o,g=this.g,cv=this.cv,dpr=devicePixelRatio||1,W=cv.clientWidth||800,H=o.h||200;
+    if(cv.width!=W*dpr||cv.height!=H*dpr){cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+"px"}
+    const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+    const pl=58,pr=12,pt=8,pb=24,w=W-pl-pr,h=H-pt-pb;this.pl=pl;this.w=w;
+    const [r0,r1]=g.r;this.r0=r0;this.r1=r1;const xs=g.x,i0=g.i0(),i1=g.i1();
+    let lo=Infinity,hi=-Infinity;
+    o.series.forEach(s=>{for(let i=i0;i<=i1;i++){const v=s.y[i];if(v!=null&&isFinite(v)){if(v<lo)lo=v;if(v>hi)hi=v}}});
+    if(o.band)for(let i=i0;i<=i1;i++){const a=o.band.lo[i],b=o.band.hi[i];if(a!=null&&a<lo)lo=a;if(b!=null&&b>hi)hi=b}
+    if(o.ymin!=null)lo=o.ymin;if(o.ymax!=null)hi=o.ymax;
+    if(o.zero){lo=Math.min(lo,0);hi=Math.max(hi,0)}
+    if(!isFinite(lo)){lo=0;hi=1}if(hi-lo<(o.minSpan||1e-6)){const m=(hi+lo)/2,s=(o.minSpan||1)/2;lo=m-s;hi=m+s}
+    if(o.ymin==null||o.ymax==null){const p=(hi-lo)*.07;if(o.ymin==null)lo-=p;if(o.ymax==null)hi+=p}
+    const X=v=>pl+(v-r0)/(r1-r0)*w,Y=v=>pt+h-(v-lo)/(hi-lo)*h;
+    c.font="13px system-ui";c.lineWidth=1;
+    // corner bands / markers
+    (o.markers||[]).forEach(m=>{if(m.x<r0-300||m.x>r1+300)return;const x=X(m.x);
+      if(m.a!=null){c.fillStyle="rgba(255,197,61,.07)";c.fillRect(X(m.a),pt,X(m.b)-X(m.a),h)}
+      c.strokeStyle="rgba(255,197,61,.45)";c.setLineDash([4,4]);c.beginPath();c.moveTo(x,pt);c.lineTo(x,pt+h);c.stroke();c.setLineDash([]);
+      c.fillStyle="#ffc53d";c.font="bold 13px system-ui";c.fillText(m.label,Math.min(x+4,W-pr-60),pt+14);c.font="13px system-ui"});
+    // grid + y labels
+    const nt=Math.max(2,Math.min(5,Math.floor(h/36)));
+    for(let k=0;k<=nt;k++){const v=lo+(hi-lo)*k/nt,y=Y(v);c.strokeStyle="#2a3138";c.beginPath();c.moveTo(pl,y);c.lineTo(W-pr,y);c.stroke();
+      c.fillStyle="#9aa4ae";c.fillText(o.yfmt?o.yfmt(v):(Math.abs(hi-lo)<4?v.toFixed(2):Math.abs(hi-lo)<40?v.toFixed(1):v.toFixed(0)),4,y+4)}
+    if(o.zero&&lo<0&&hi>0){c.strokeStyle="#8b949e";c.beginPath();c.moveTo(pl,Y(0));c.lineTo(W-pr,Y(0));c.stroke()}
+    // x labels
+    const span=r1-r0,stepx=[5,10,20,25,50,100,200,250,500,1000].find(s=>span/s<=10)||1000;
+    c.fillStyle="#9aa4ae";for(let v=Math.ceil(r0/stepx)*stepx;v<=r1;v+=stepx){const x=X(v);c.fillText(Math.round(v)+" m",Math.min(x-14,W-pr-46),H-6)}
+    // series
+    c.save();c.beginPath();c.rect(pl,pt,w,h);c.clip();
+    if(o.band){const B=o.band;c.fillStyle=B.color||"rgba(139,148,158,.18)";c.beginPath();let st=false;
+      for(let i=i0;i<=i1;i++){if(B.hi[i]==null)continue;const x=X(xs[i]),y=Y(B.hi[i]);st?c.lineTo(x,y):c.moveTo(x,y);st=true}
+      for(let i=i1;i>=i0;i--){if(B.lo[i]==null)continue;c.lineTo(X(xs[i]),Y(B.lo[i]))}c.closePath();c.fill()}
+    (o.notes?o.notes():[]).forEach(n=>{if(n.dist<r0||n.dist>r1)return;const x=X(n.dist);c.strokeStyle=n.status=="resolved"?"rgba(57,217,138,.7)":"#c792ff";c.lineWidth=2;
+      c.setLineDash([2,3]);c.beginPath();c.moveTo(x,pt);c.lineTo(x,pt+h);c.stroke();c.setLineDash([]);c.fillStyle=c.strokeStyle;c.font="bold 12px system-ui";
+      const t="✎ "+(n.text.length>28?n.text.slice(0,27)+"…":n.text);c.fillText(t,Math.min(x+4,W-pr-c.measureText(t).width-4),pt+h-6);c.font="13px system-ui";c.lineWidth=1});
+    const stride=Math.max(1,Math.floor((i1-i0)/(w*1.5)));
+    o.series.forEach(s=>{c.strokeStyle=s.color;c.lineWidth=s.width||1.8;c.setLineDash(s.dash||[]);c.beginPath();let on=false;
+      for(let i=i0;i<=i1;i+=stride){const v=s.y[i];if(v==null){on=false;continue}const x=X(xs[i]),y=Y(v);on?c.lineTo(x,y):c.moveTo(x,y);on=true}
+      c.stroke()});c.setLineDash([]);
+    // drag box
+    if(this.drag&&this.drag.b!=null){c.fillStyle="rgba(53,199,255,.15)";const a=X(this.drag.a),b=X(this.drag.b);c.fillRect(Math.min(a,b),pt,Math.abs(b-a),h)}
+    // hover
+    if(g.hover!=null&&g.hover>=r0&&g.hover<=r1){const x=X(g.hover),i=Math.min(xs.length-1,bisect(xs,g.hover));
+      c.strokeStyle="#e6e9ec";c.globalAlpha=.6;c.beginPath();c.moveTo(x,pt);c.lineTo(x,pt+h);c.stroke();c.globalAlpha=1;
+      const vals=o.series.filter(s=>s.label!==false).map(s=>[s.color,s.y[i]]);
+      let bx=x+10;const bw=78,bh=18*vals.length+6;if(bx+bw>W-pr)bx=x-10-bw;
+      c.fillStyle="rgba(15,18,20,.88)";c.fillRect(bx,pt+4,bw,bh);
+      vals.forEach(([col,v],k)=>{c.fillStyle=col;c.font="bold 13px ui-monospace,Consolas,monospace";
+        c.fillText(v==null?"-":(o.yfmt?o.yfmt(v):(+v).toFixed(o.dp??1)),bx+6,pt+20+18*k)});c.font="13px system-ui";
+      vals.forEach(([col,v])=>{if(v==null)return;c.fillStyle=col;c.beginPath();c.arc(x,Y(v),3.5,0,7);c.fill()})}
+    c.restore();
+  }
+}
+
+// ------------------------------------------------------------- shared combo data
+let CL=null,CL_SID=null;
+async function loadCombo(force){if(!SID)return null;if(force||CL_SID!==SID||!CL){CL=await J(`/api/combo_laps?sid=${encodeURIComponent(SID)}`);CL_SID=SID}return CL}
+const lapKey=l=>l.session+"~"+l.lap;
+const hhmm=s=>(s||"").slice(11,16);
+const sessLabel=sid=>{const s=(CL.sessions||[]).find(x=>x.id==sid);return s?hhmm(s.started)+" "+(s.started||"").slice(5,10):sid.slice(0,16)};
+function cLab(c){return !c?"":(c.name&&c.name!=c.id?c.id+" "+c.name:c.id)}
+// place a map label next to point (p,q): prefer the side facing away from the map centre (cx,cy), skip spots that overlap labels already placed
+function putLabel(c,t,p,q,placed,cx,cy,W,H,rad){rad=rad||4;const g=rad+3,w=c.measureText(t).width,h=12,ox=p-cx,oy=q-cy;
+  const cands=[[g,4],[g*.7,-g*.7],[g*.7,g*.7+h],[-w-g,4],[-w-g*.7,-g*.7],[-w-g*.7,g*.7+h],[-w/2,-g],[-w/2,g+h],[g,-g-8],[-w-g,-g-8],[g,g+h+8],[-w-g,g+h+8]].map(d=>{const vx=d[0]+w/2,vy=d[1]-h/2,L=Math.hypot(vx,vy)||1,O=Math.hypot(ox,oy)||1;return [d,(vx*ox+vy*oy)/(L*O)-L/60]}).sort((a,b)=>b[1]-a[1]).map(x=>x[0]);
+  const hit=(x,y)=>placed.some(r=>x<r[2]&&x+w>r[0]&&y-h<r[3]&&y>r[1])||(W&&(x<0||x+w>W||y-h<0||y>H));
+  let pick=cands.find(([dx,dy])=>!hit(p+dx,q+dy))||cands[0];const x=p+pick[0],y=q+pick[1];placed.push([x-4,y-h-2,x+w+4,y+4]);c.fillText(t,x,y)}
+function cornerName(cid){const c=(CL.corners||[]).find(x=>x.id==cid);return c?cLab(c):cid}
+// landmarks = named points that are not timed corners (e.g. a flat-out kink); drawn in grey
+function drawLandmarks(c,lms,at){c.save();c.font="italic 11px system-ui";(lms||[]).forEach(m=>{const pt=at(m.dist_m);if(!pt)return;c.fillStyle="#9aa4ae";c.beginPath();c.arc(pt[0],pt[1],3,0,7);c.fill();c.fillText(m.name,pt[0]+5,pt[1]+12)});c.restore()}
+function hashState(){const h=location.hash.slice(1).split("&"),o={};h.forEach(p=>{const[k,v]=p.split("=");if(v!=null)o[k]=decodeURIComponent(v);else if(k)o.tab=k});return o}
+function setHash(o){const s=Object.entries(o).filter(([k,v])=>v!=null&&v!=="").map(([k,v])=>k=="tab"?v:k+"="+encodeURIComponent(v)).join("&");history.replaceState(null,"","#"+s)}
+
+// ------------------------------------------------------------- DRIVER NOTES (read by the engineer)
+let NOTES=[];
+async function loadNotes(){if(!SID)return[];NOTES=await J(`/api/notes?sid=${encodeURIComponent(SID)}`);return NOTES}
+const QUICK=["Understeer on entry","Understeer mid-corner","Understeer on exit","Oversteer on entry","Snap oversteer on exit","Locking up","Wheelspin","Bottoming / bumpy","Can't see the apex","Not sure of the line here"];
+function nearCorner(d){return (CL&&CL.corners||[]).reduce((a,b)=>!a||Math.abs(b.apex_m-d)<Math.abs(a.apex_m-d)?b:a,null)}
+function openNote(o){ // o: {dist, x, z, source, cx, cy, zoom}
+  closeNote();const c=nearCorner(o.dist);const laps=(CMP.data&&tab=="Compare")?CMP.data.laps:[];
+  const el=document.createElement("div");el.id="notepop";el.className="notepop";
+  el.innerHTML=`<div class="row" style="justify-content:space-between"><b>Note for your engineer</b><button onclick="closeNote()">✕</button></div>
+   <div class="dim">${Math.round(o.dist)} m${c?` · ${sgn(Math.round(o.dist-c.apex_m),0)} m from ${cLab(c)} apex`:""}</div>
+   <div class="qk">${QUICK.map(q=>`<button onclick="document.getElementById('ntxt').value=(document.getElementById('ntxt').value?document.getElementById('ntxt').value+'. ':'')+this.textContent">${q}</button>`).join("")}</div>
+   <textarea id="ntxt" rows="3" placeholder="What's happening here? e.g. I'm understeering here, can't get on the throttle"></textarea>
+   <div class="row"><label class="dim">About <select id="nlap"><option value="">every lap / general</option>${laps.map(l=>`<option value="${l.session}~${l.lap}">L${l.lap} ${fmt(l.time)}</option>`).join("")}</select></label>
+   <span style="margin-left:auto"></span>${o.zoom&&c?`<button onclick="closeNote();zoomTo('${c.id}')">Just zoom to ${cLab(c)}</button>`:""}<button class="pri" onclick="saveNote()">Save note</button></div>`;
+  document.body.appendChild(el);
+  const W=innerWidth,H=innerHeight;el.style.left=Math.max(8,Math.min(W-380,(o.cx||W/2)-180))+"px";el.style.top=Math.max(8,Math.min(H-330,(o.cy||H/2)+12))+"px";
+  el.dataset.o=JSON.stringify(o);setTimeout(()=>{const t=$("#ntxt");t&&t.focus()},30)}
+function closeNote(){const e=$("#notepop");if(e)e.remove()}
+async function saveNote(){const el=$("#notepop");if(!el)return;const o=JSON.parse(el.dataset.o),t=$("#ntxt").value.trim();if(!t){$("#ntxt").focus();return}
+  const lk=$("#nlap").value;const[ls,ln]=lk?lk.split("~"):[null,null];
+  await post("/api/note_add",{sid:SID,dist:o.dist,x:o.x,z:o.z,source:o.source,text:t,session:ls,lap:ln?+ln:null});
+  closeNote();await loadNotes();refreshNotes()}
+async function delNote(id){await post("/api/note_delete",{sid:SID,id});await loadNotes();refreshNotes()}
+function refreshNotes(){if(CMP.group)CMP.group.draw();document.querySelectorAll(".noteslist").forEach(drawNotesList)}
+function drawNotesList(el){
+  const ns=NOTES;el.innerHTML=`<h3>Notes for your engineer (${ns.filter(n=>n.status!="resolved").length} open)</h3>
+  ${ns.length?ns.map(n=>`<div class="note ${n.status}"><div class="row" style="justify-content:space-between;gap:6px"><span class="clk" onclick="${tab=="Compare"?`CMP.group&&CMP.group.set(${n.dist-150},${n.dist+150})`:`CMP.zoom=null;go('Compare')`}"><b>${n.corner_name||""}</b> <span class="dim">${Math.round(n.dist)} m${n.from_apex_m!=null?` (${sgn(n.from_apex_m,0)} m)`:""}</span></span><button title="remove" onclick="delNote('${n.id}')">✕</button></div>
+   <div>"${n.text}"</div><div class="dim">${n.created.slice(5,16)}${n.lap?` · lap ${n.lap}`:""}${n.status=="resolved"?" · analysed":""}</div>${n.resolution?`<div class="good">Engineer: ${n.resolution}</div>`:""}</div>`).join(""):
+  `<div class="dim">Click anywhere on a chart or the track map to leave a note like "understeering here". Claude reads these with your laps and answers them in the next debrief.</div>`}`}
+addEventListener("keydown",e=>{if(e.key=="Escape")closeNote();if(e.key=="Enter"&&e.ctrlKey&&$("#notepop"))saveNote()});
+
+// ------------------------------------------------------------- COMPARE (any laps, any session of this track+car)
+let CMP={sel:[],zoom:null,data:null,group:null};
+async function rCompare(){
+  await loadCombo();
+  const hs=hashState();
+  if(hs.laps){CMP.sel=hs.laps.split(",").filter(Boolean)}
+  const keys=new Set(CL.laps.map(lapKey));CMP.sel=CMP.sel.filter(k=>keys.has(k));
+  if(!CMP.sel.length){const clean=CL.laps.filter(l=>l.valid&&!l.pit);
+    if(CL.ref)CMP.sel.push(CL.ref.session+"~"+CL.ref.lap);
+    const others=clean.filter(l=>!CMP.sel.includes(lapKey(l)));const last=others[others.length-1];if(last)CMP.sel.push(lapKey(last))}
+  if(hs.z)CMP.zoom=hs.z;
+  $("#main").innerHTML=`
+  <div class="card"><h3>Pick laps (any session at this track in this car) · first = reference · max 4</h3><div id="picker"></div></div>
+  <div class="card sticky" id="cmphead"></div>
+  <div class="cmpgrid"><div><div class="card zcard"><div class="zct">Driving line · ▲ turn-in · ○ apex (closest to the inside) · ■ slowest point · grey = road you've used on valid laps </div><div class="lmwrap"><canvas id="lmap"></canvas><div class="lmbtn"><button onclick="CMP.lmZoom(1.4)" title="zoom in">+</button><button onclick="CMP.lmZoom(1/1.4)" title="zoom out">−</button><button onclick="CMP.lv=null;drawLineMap()" title="reset view">⟲</button></div>
+   <div class="lmhelp">drag = move · scroll or +/− = zoom · click = add a note · ⟲ = reset</div></div></div><div id="cmpcharts"></div></div>
+   <div class="side"><div class="card"><h3>Track · click to add a note</h3><canvas id="cmap"></canvas></div><div class="card" id="readout"></div><div class="card noteslist"></div></div></div>
+  <div class="card"><h3>Corner by corner (time vs reference, key numbers)</h3><div id="ctable" class="tablewrap"></div></div>
+  <p class="dim">Tip: drag across any chart to zoom in, double-click to zoom out. Use the corner buttons to jump to a corner. The address bar keeps your selection, so you can bookmark or share a comparison.</p>`;
+  await loadNotes();drawPicker();await loadTraces();document.querySelectorAll(".noteslist").forEach(drawNotesList);
+}
+function drawPicker(){
+  const bySess={};CL.laps.forEach(l=>(bySess[l.session]=bySess[l.session]||[]).push(l));
+  const best=CL.ref?CL.ref.time:null;
+  $("#picker").innerHTML=Object.entries(bySess).reverse().map(([sid,ls])=>`<div class="prow"><span class="plab">${sessLabel(sid)}</span>${ls.map(l=>{
+    const k=lapKey(l),i=CMP.sel.indexOf(k),col=i>=0?LAPCOL[i]:null;
+    const cls=[!l.valid?"inv":"",l.pit?"pit":"",best&&l.time==best?"pb":""].join(" ");
+    return `<button class="chip ${cls}" style="${col?`background:${col};color:#111;border-color:${col}`:""}" onclick="toggleLap('${k}')" title="${l.valid?"":"invalid · "}${l.pit?"pit/out lap · ":""}run ${l.run}">L${l.lap} <b>${fmt(l.time)}</b>${i==0?" ★":""}</button>`}).join("")}</div>`).join("")}
+async function toggleLap(k){const i=CMP.sel.indexOf(k);if(i>=0)CMP.sel.splice(i,1);else{if(CMP.sel.length>=4)CMP.sel.pop();CMP.sel.push(k)}
+  drawPicker();await loadTraces()}
+let trTok=0;
+async function loadTraces(){
+  const tok=++trTok;setHash({tab:"Compare",laps:CMP.sel.join(","),z:CMP.zoom});
+  if(!CMP.sel.length){$("#cmpcharts").innerHTML="<div class='card'>Pick at least one lap.</div>";return}
+  $("#cmphead").innerHTML="<span class='dim'>loading traces…</span>";
+  const d=await J(`/api/traces?laps=${encodeURIComponent(CMP.sel.join(","))}`);
+  if(tok!==trTok)return;if(!d.laps){$("#cmphead").innerHTML="Could not load those laps.";return}
+  CMP.data=d;drawCompare()}
+function lapMeta(k){return CL.laps.find(l=>lapKey(l)==k)}
+function drawCompare(){
+  const d=CMP.data,g=new ZGroup(d.dist);CMP.group=g;
+  const corners=[...(CL.corners||[])].sort((a,b)=>a.apex_m-b.apex_m);
+  const mk=corners.map(c=>({x:c.apex_m,label:cLab(c)}));
+  const ls=d.laps,col=i=>LAPCOL[i];
+  $("#cmphead").innerHTML=`<div class="row">${ls.map((l,i)=>`<span class="lapbadge" style="border-color:${col(i)}"><i style="background:${col(i)}"></i>${i==0?"REF ":""}L${l.lap} ${fmt(l.time)} <span class="dim">${sessLabel(l.session)}${l.valid?"":" · invalid"}</span>${i?` <b class="${l.time-ls[0].time<0?"good":"bad"}">${sgn(l.time-ls[0].time)}</b>`:""}</span>`).join("")}</div>
+   <div class="row" style="margin-top:8px"><button class="zbtn" onclick="zoomTo(null)">Full lap</button>${corners.map(c=>`<button class="zbtn" onclick="zoomTo('${c.id}')">${cLab(c)}</button>`).join("")}
+   <span class="dim" style="margin-left:auto">drag = zoom · double-click = reset</span></div>`;
+  const panels=[
+    {k:"delta",title:"Time vs reference (s) · line going UP = losing time",h:190,zero:true,yfmt:v=>sgn(v,2),skip0:true,dp:3},
+    {k:"spd",title:"Speed (km/h)",h:230,dp:0},
+    {k:"lat",title:"Line vs your best lap (m) · above 0 = LEFT of it · grey = road you've used (valid laps)",h:170,dp:1,zero:true},
+    {k:"pedals",title:"Throttle (solid) & brake (dashed), %",h:190,ymin:-2,ymax:102},
+    {k:"str",title:"Steering (more lock = more understeer/scrub)",h:160,dp:2},
+    {k:"gear",title:"Gear",h:110,dp:0,ymin:0,ymax:7},
+    {k:"latg",title:"Lateral g",h:140,dp:2}];
+  $("#cmpcharts").innerHTML=panels.map(p=>`<div class="card zcard" id="zp_${p.k}"></div>`).join("");
+  panels.forEach(p=>{let series;
+    if(p.k=="pedals"){series=[];ls.forEach((l,i)=>{series.push({y:l.thr.map(v=>v==null?null:v*100),color:col(i),width:2});series.push({y:l.brk.map(v=>v==null?null:v*100),color:col(i),width:2,dash:[6,4],label:false})})}
+    else series=ls.map((l,i)=>({y:l[p.k],color:col(i),width:p.k=="delta"?2.4:1.9})).filter((s,i)=>!(p.skip0&&i==0));
+    if(p.k=="lat"&&!ls[0].lat){$("#zp_lat").remove();return}
+    new ZChart($("#zp_"+p.k),{group:g,h:p.h,series,title:p.title,zero:p.zero,yfmt:p.yfmt,ymin:p.ymin,ymax:p.ymax,markers:mk,dp:p.dp,minSpan:p.minSpan,
+      band:p.k=="lat"&&d.env_left?{lo:d.env_right,hi:d.env_left}:null,notes:()=>NOTES,
+      onClick:(x,e)=>{const i=Math.min(d.dist.length-1,bisect(d.dist,x));openNote({dist:x,x:ls[0].x[i],z:ls[0].z[i],source:"chart:"+p.k,cx:e.clientX,cy:e.clientY})}})});
+  g.listeners.push(()=>{drawMap();drawReadout();drawLineMap()});
+  drawCornerTable(corners);
+  if(CMP.zoom)zoomTo(CMP.zoom,true);else{drawMap();drawReadout();drawLineMap()}
+  const pickNote=(cv,pick,e)=>{const r=cv.getBoundingClientRect();const p=pick&&pick(e.clientX-r.left,e.clientY-r.top);if(p==null)return;
+    const i=Math.min(d.dist.length-1,bisect(d.dist,p));openNote({dist:p,x:ls[0].x[i],z:ls[0].z[i],source:cv.id,cx:e.clientX,cy:e.clientY,zoom:cv.id=="cmap"})};
+  $("#cmap").onclick=e=>pickNote($("#cmap"),CMP.mapPick,e);
+  // line map: drag = move, scroll / buttons = zoom, click (no drag) = add a note, double-click = reset
+  const LM=$("#lmap");let pan=null,clickT=null;
+  LM.onmousedown=e=>{pan={x:e.clientX,y:e.clientY,moved:false};e.preventDefault()};
+  addEventListener("mousemove",e=>{if(!pan||!CMP.lv)return;const dx=e.clientX-pan.x,dy=e.clientY-pan.y;
+    if(!pan.moved&&Math.hypot(dx,dy)<5)return;pan.moved=true;LM.style.cursor="grabbing";
+    const [ax,az]=CMP.lvInv(0,0),[bx,bz]=CMP.lvInv(dx,dy);CMP.lv.cx-=bx-ax;CMP.lv.cz-=bz-az;pan.x=e.clientX;pan.y=e.clientY;drawLineMap()});
+  addEventListener("mouseup",e=>{if(!pan)return;const p=pan;pan=null;LM.style.cursor="";
+    if(!p.moved&&e.target===LM){clearTimeout(clickT);clickT=setTimeout(()=>pickNote(LM,CMP.linePick,e),260)}});
+  CMP.lmZoom=k=>{if(!CMP.lv)return;CMP.lv.f=Math.max(0.5,Math.min(40,CMP.lv.f*k));drawLineMap()};
+  $("#lmap").onwheel=e=>{if(!CMP.lv||!CMP.lvInv)return;e.preventDefault();const r=$("#lmap").getBoundingClientRect(),px=e.clientX-r.left,py=e.clientY-r.top;
+    const [wx,wz]=CMP.lvInv(px,py);const k=e.deltaY<0?1.25:0.8;CMP.lv.f=Math.max(0.5,Math.min(40,CMP.lv.f*k));
+    // keep the point under the cursor fixed
+    const [wx2,wz2]=CMP.lvInv(px,py);CMP.lv.cx+=wx-wx2;CMP.lv.cz+=wz-wz2;drawLineMap()};
+  $("#lmap").ondblclick=e=>{clearTimeout(clickT);CMP.lv=null;drawLineMap()};
+  $("#lmap").onmousemove=e=>{if(pan&&pan.moved)return;const r=$("#lmap").getBoundingClientRect();const p=CMP.linePick&&CMP.linePick(e.clientX-r.left,e.clientY-r.top,true);if(p!=null)g.setHover(p)};
+}
+function zoomTo(cid,keepHash){const g=CMP.group;if(!g)return;CMP.zoom=cid;
+  if(!cid)g.reset();else{const c=CL.corners.find(x=>x.id==cid);if(c){const L=CMP.data.track_length;
+    const a=Math.max(0,c.apex_m-Math.min(320,Math.max(160,c.apex_m-c.start_m))),b=Math.min(L,c.apex_m+Math.min(260,Math.max(140,c.end_m-c.apex_m)));g.set(a,b)}}
+  if(!keepHash)setHash({tab:"Compare",laps:CMP.sel.join(","),z:cid});
+  document.querySelectorAll(".zbtn").forEach(b=>b.classList.toggle("on",b.textContent==(cid?cornerName(cid):"Full lap")))}
+function drawMap(){
+  const cv=$("#cmap");if(!cv||!CMP.data)return;const L=CMP.data.laps[0],xs=L.x,zs=L.z;if(!xs)return;
+  const dpr=devicePixelRatio||1,W=cv.clientWidth||300,H=Math.min(340,W*0.9);if(cv.width!=W*dpr){cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+"px"}
+  const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+  const v=xs.map((x,i)=>[x,zs[i]]).filter(p=>p[0]!=null);const mnx=Math.min(...v.map(p=>p[0])),mxx=Math.max(...v.map(p=>p[0])),mnz=Math.min(...v.map(p=>p[1])),mxz=Math.max(...v.map(p=>p[1]));
+  const sc=Math.min((W-30)/(mxx-mnx||1),(H-30)/(mxz-mnz||1)),ox=(W-(mxx-mnx)*sc)/2,oz=(H-(mxz-mnz)*sc)/2;
+  // AMS2/R3E: x right, z towards camera -> draw x mirrored so the map reads like the game map
+  const P=i=>[W-(ox+(xs[i]-mnx)*sc),oz+(zs[i]-mnz)*sc];
+  const g=CMP.group,d=CMP.data.dist;c.lineWidth=5;c.strokeStyle="#39424b";c.beginPath();let on=false;
+  for(let i=0;i<xs.length;i+=2){if(xs[i]==null)continue;const[p,q]=P(i);on?c.lineTo(p,q):c.moveTo(p,q);on=true}c.stroke();
+  c.strokeStyle="#35c7ff";c.lineWidth=5;c.beginPath();on=false;for(let i=g.i0();i<=g.i1();i++){if(xs[i]==null)continue;const[p,q]=P(i);on?c.lineTo(p,q):c.moveTo(p,q);on=true}c.stroke();
+  c.font="bold 12px system-ui";{const pl=[],cs=(CL.corners||[]).map(cn=>{const i=Math.min(xs.length-1,bisect(d,cn.apex_m));return xs[i]==null?null:[cn,...P(i)]}).filter(Boolean);
+   c.fillStyle="#ffc53d";cs.forEach(([cn,p,q])=>{c.beginPath();c.arc(p,q,4,0,7);c.fill();pl.push([p-4,q-4,p+4,q+4])});cs.forEach(([cn,p,q])=>putLabel(c,cLab(cn),p,q,pl,W/2,H/2,W,H))}
+  drawLandmarks(c,CL.landmarks,dm=>{const i=Math.min(xs.length-1,bisect(d,dm));return xs[i]==null?null:P(i)});c.font="bold 12px system-ui";
+  const[s0,s1]=P(0);c.fillStyle="#39d98a";c.fillRect(s0-4,s1-4,8,8);
+  NOTES.forEach(n=>{const i=Math.min(xs.length-1,bisect(d,n.dist));if(xs[i]==null)return;const[p,q]=P(i);c.fillStyle=n.status=="resolved"?"#39d98a":"#c792ff";c.beginPath();c.arc(p,q,6,0,7);c.fill();c.fillStyle="#111";c.font="bold 10px system-ui";c.fillText("✎",p-4,q+4)});c.font="bold 12px system-ui";
+  if(g.hover!=null){const i=Math.min(xs.length-1,bisect(d,g.hover));if(xs[i]!=null){const[p,q]=P(i);c.fillStyle="#fff";c.beginPath();c.arc(p,q,6,0,7);c.fill()}}
+  CMP.mapPick=(px,py)=>{let best=null,bd=1e9;for(let i=0;i<xs.length;i+=3){if(xs[i]==null)continue;const[p,q]=P(i),dd=(p-px)**2+(q-py)**2;if(dd<bd){bd=dd;best=d[i]}}return bd<900?best:null};
+}
+function drawLineMap(){
+  const cv=$("#lmap");if(!cv||!CMP.data)return;const D=CMP.data,g=CMP.group,ls=D.laps,dist=D.dist;
+  const dpr=devicePixelRatio||1,W=cv.clientWidth||800,H=420;if(cv.width!=W*dpr||cv.height!=H*dpr){cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+"px"}
+  const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
+  const i0=g.i0(),i1=g.i1(),rx=D.ref_x,rz=D.ref_z;
+  // used-road edges from the best lap's line + envelope offsets (left normal = (-tz, tx))
+  let edgeL=[],edgeR=[];
+  if(rx&&D.env_left){for(let i=i0;i<=i1;i++){const a=Math.max(0,i-2),b=Math.min(rx.length-1,i+2);if(rx[i]==null||rx[a]==null||rx[b]==null||D.env_left[i]==null){edgeL.push(null);edgeR.push(null);continue}
+    let tx=rx[b]-rx[a],tz=rz[b]-rz[a];const L=Math.hypot(tx,tz)||1;tx/=L;tz/=L;const nx=-tz,nz=tx;
+    edgeL.push([rx[i]+nx*D.env_left[i],rz[i]+nz*D.env_left[i]]);edgeR.push([rx[i]+nx*D.env_right[i],rz[i]+nz*D.env_right[i]])}}
+  const pts=[];ls.forEach(l=>{for(let i=i0;i<=i1;i++)if(l.x[i]!=null)pts.push([l.x[i],l.z[i]])});edgeL.concat(edgeR).forEach(p=>{if(p)pts.push(p)});
+  if(!pts.length)return;let mnx=Math.min(...pts.map(p=>p[0])),mxx=Math.max(...pts.map(p=>p[0])),mnz=Math.min(...pts.map(p=>p[1])),mxz=Math.max(...pts.map(p=>p[1]));
+  const pad=24,sc0=Math.min((W-2*pad)/(mxx-mnx||1),(H-2*pad)/(mxz-mnz||1));
+  // view: zoom factor + centre (world). Reset when the distance range changes.
+  const key=g.r.join(",")+"|"+W;
+  if(!CMP.lv||CMP.lv.key!==key){let cx=(mnx+mxx)/2,cz=(mnz+mxz)/2,f=1;
+    const cn=CMP.zoom&&(CL.corners||[]).find(x=>x.id==CMP.zoom);
+    if(cn&&rx){const ia=Math.min(dist.length-1,bisect(dist,cn.apex_m));if(rx[ia]!=null){cx=rx[ia];cz=rz[ia];f=2.2}}
+    CMP.lv={key,cx,cz,f}}
+  const V=CMP.lv,sc=sc0*V.f;
+  const P=(x,z)=>[W/2-(x-V.cx)*sc,H/2+(z-V.cz)*sc];
+  CMP.lvInv=(px,py)=>[V.cx-(px-W/2)/sc,V.cz+(py-H/2)/sc];
+  // road
+  if(edgeL.length){c.fillStyle="rgba(139,148,158,.16)";c.beginPath();let st=false;edgeL.forEach(p=>{if(!p)return;const[a,b]=P(p[0],p[1]);st?c.lineTo(a,b):c.moveTo(a,b);st=true});
+    for(let k=edgeR.length-1;k>=0;k--){const p=edgeR[k];if(!p)continue;const[a,b]=P(p[0],p[1]);c.lineTo(a,b)}c.closePath();c.fill();
+    c.strokeStyle="rgba(200,205,210,.45)";c.lineWidth=1;[edgeL,edgeR].forEach(E=>{c.beginPath();let s2=false;E.forEach(p=>{if(!p){s2=false;return}const[a,b]=P(p[0],p[1]);s2?c.lineTo(a,b):c.moveTo(a,b);s2=true});c.stroke()})}
+  // scale bar
+  const m10=10*sc;c.strokeStyle="#9aa4ae";c.lineWidth=2;c.beginPath();c.moveTo(12,H-14);c.lineTo(12+m10,H-14);c.stroke();c.fillStyle="#9aa4ae";c.font="12px system-ui";c.fillText("10 m",16+m10,H-10);
+  // lines
+  ls.forEach((l,k)=>{c.strokeStyle=LAPCOL[k];c.lineWidth=k?2.2:2.8;c.beginPath();let on=false;for(let i=i0;i<=i1;i++){if(l.x[i]==null){on=false;continue}const[a,b]=P(l.x[i],l.z[i]);on?c.lineTo(a,b):c.moveTo(a,b);on=true}c.stroke()});
+  // corner apex markers + per-lap turn-in / apex / slowest point
+  const cs=(CL.corners||[]).filter(cn=>cn.apex_m>=dist[i0]&&cn.apex_m<=dist[i1]);
+  c.font="bold 13px system-ui";
+  cs.forEach(cn=>{const ia=Math.min(dist.length-1,bisect(dist,cn.apex_m));if(rx&&rx[ia]!=null){const[a,b]=P(rx[ia],rz[ia]);c.fillStyle="#ffc53d";c.fillText(cLab(cn),a+8,b-8)}
+    ls.forEach((l,k)=>{const lm=(lapMeta(l.session+"~"+l.lap)||{}).line;const m=lm&&lm[cn.id];if(!m)return;
+      const at=rel=>{if(rel==null)return null;const i=Math.min(dist.length-1,bisect(dist,cn.apex_m+rel));return l.x[i]==null?null:P(l.x[i],l.z[i])};
+      c.fillStyle=c.strokeStyle=LAPCOL[k];c.lineWidth=2.5;
+      let p=at(m.turn_in_m);if(p){c.beginPath();c.moveTo(p[0],p[1]-8);c.lineTo(p[0]-7,p[1]+5);c.lineTo(p[0]+7,p[1]+5);c.closePath();c.fill()}
+      p=at(m.apex_geo_m);if(p){c.beginPath();c.arc(p[0],p[1],7,0,7);c.stroke()}
+      p=at(m.min_speed_at_m);if(p){c.fillRect(p[0]-4,p[1]-4,8,8)}})});
+  if(rx)drawLandmarks(c,(CL.landmarks||[]).filter(m=>m.dist_m>=dist[i0]&&m.dist_m<=dist[i1]),dm=>{const i=Math.min(dist.length-1,bisect(dist,dm));return rx[i]==null?null:P(rx[i],rz[i])});c.font="bold 13px system-ui";
+  // notes
+  NOTES.forEach(n=>{if(n.dist<dist[i0]||n.dist>dist[i1]||n.x==null)return;const[a,b]=P(n.x,n.z);c.fillStyle=n.status=="resolved"?"#39d98a":"#c792ff";c.beginPath();c.arc(a,b,8,0,7);c.fill();c.fillStyle="#111";c.font="bold 11px system-ui";c.fillText("✎",a-4,b+4);
+    c.fillStyle="#c792ff";c.font="bold 12px system-ui";c.fillText(n.text.length>34?n.text.slice(0,33)+"…":n.text,a+11,b+4)});
+  // hover
+  if(g.hover!=null){const i=Math.min(dist.length-1,bisect(dist,g.hover));ls.forEach((l,k)=>{if(l.x[i]==null)return;const[a,b]=P(l.x[i],l.z[i]);c.fillStyle="#fff";c.beginPath();c.arc(a,b,5,0,7);c.fill();c.fillStyle=LAPCOL[k];c.beginPath();c.arc(a,b,3,0,7);c.fill()})}
+  const L0=ls[0];CMP.linePick=(px,py,loose)=>{let best=null,bd=1e9;for(let i=i0;i<=i1;i++){if(L0.x[i]==null)continue;const[a,b]=P(L0.x[i],L0.z[i]),dd=(a-px)**2+(b-py)**2;if(dd<bd){bd=dd;best=dist[i]}}return bd<(loose?2500:1600)?best:null};
+}
+function drawReadout(){
+  const el=$("#readout");if(!el||!CMP.data)return;const g=CMP.group,d=CMP.data.dist,ls=CMP.data.laps;
+  const x=g.hover!=null?g.hover:null;
+  if(x==null){el.innerHTML=`<h3>Values at cursor</h3><div class="dim">Hover over a chart.</div>`;return}
+  const i=Math.min(d.length-1,bisect(d,x));
+  const near=(CL.corners||[]).reduce((a,b)=>Math.abs(b.apex_m-x)<Math.abs(a.apex_m-x)?b:a,(CL.corners||[])[0]||{apex_m:0,name:""});
+  el.innerHTML=`<h3>At ${Math.round(d[i])} m <span class="dim">(${sgn(Math.round(d[i]-near.apex_m),0)} m from ${near.name} apex)</span></h3>
+  <table class="ro"><tr><th></th><th>Δ s</th><th>km/h</th><th>thr</th><th>brk</th><th>gear</th><th>steer</th><th title="metres left (+) / right (-) of your best lap's line">line</th></tr>
+  ${ls.map((l,k)=>`<tr><td><i class="dot" style="background:${LAPCOL[k]}"></i>L${l.lap}</td><td>${k?sgn(l.delta[i],3):"ref"}</td><td>${f(l.spd[i],0)}</td><td>${f(l.thr[i]*100,0)}</td><td>${f(l.brk[i]*100,0)}</td><td>${f(l.gear[i],0)}</td><td>${f(l.str[i],2)}</td><td>${l.lat?sgn(l.lat[i],1):"-"}</td></tr>`).join("")}</table>
+  <div class="dim" style="margin-top:4px">line = metres left (+) / right (−) of your best lap's line</div>`}
+function drawCornerTable(corners){
+  const d=CMP.data,ls=d.laps,ref=ls[0],dist=d.dist;
+  const segT=(l,a,b)=>{const ia=Math.min(dist.length-1,bisect(dist,a)),ib=Math.min(dist.length-1,bisect(dist,b));return l.delta[ib]==null||l.delta[ia]==null?null:l.delta[ib]-l.delta[ia]};
+  const metr=(l,cid)=>{const m=lapMeta(l.session+"~"+l.lap);if(!m)return {};return Object.assign({},m.corners[cid]||{},Object.fromEntries(Object.entries((m.line||{})[cid]||{}).map(([k,v])=>["line_"+k,v])))};
+  const cols=[["brake_m","Brake (m before apex)",v=>v==null?"-":f(-v,0),1],["min_speed","Min km/h",v=>f(v,0),1],["throttle_on_m","Throttle on (m after apex)",v=>f(v,0),-1],["full_throttle_m","Flat (m after apex)",v=>f(v,0),-1],["coast_m","Coast m",v=>f(v,0),-1],["max_steer","Max steer",v=>f(v,2),-1],["exit_speed","Exit km/h",v=>f(v,0),1],
+    ["line_turn_in_m","Turn-in m",v=>v==null?"-":f(-v,0)],["line_apex_geo_m","Apex m",v=>v==null?"-":sgn(v,0)],["line_apex_gap_m","Off apex m",v=>f(v,1)],["line_off_exit","Exit line m",v=>v==null?"-":sgn(v,1)]];
+  let h=`<table class="ct"><tr><th>Corner</th>${ls.slice(1).map((l,i)=>`<th style="color:${LAPCOL[i+1]}">L${l.lap} Δ</th>`).join("")}${cols.map(c=>`<th>${c[1]}</th>`).join("")}</tr>`;
+  corners.forEach(c=>{h+=`<tr class="clk" onclick="zoomTo('${c.id}');scrollTo({top:0,behavior:'smooth'})"><td><b>${cLab(c)}</b> <span class="dim">${Math.round(c.apex_m)} m</span></td>
+    ${ls.slice(1).map(l=>{const v=segT(l,c.start_m,c.end_m);return `<td class="mono ${v==null?"":v<-0.02?"good":v>0.02?"bad":""}">${v==null?"-":sgn(v,3)}</td>`}).join("")}
+    ${cols.map(([k,,fm])=>`<td class="mono">${ls.map((l,i)=>`<span style="color:${LAPCOL[i]}">${fm(metr(l,c.id)[k])}</span>`).join(" / ")}</td>`).join("")}</tr>`});
+  h+=`<tr><td><b>Lap</b></td>${ls.slice(1).map(l=>`<td class="mono ${l.time<ref.time?"good":"bad"}"><b>${sgn(l.time-ref.time,3)}</b></td>`).join("")}<td colspan="${cols.length}" class="dim" style="text-align:left">Click a corner to zoom the charts to it. Numbers per lap in the lap colours (reference first). Turn-in = m before the apex marker where you start steering · Apex = where you're closest to the inside, m vs the marker (− = earlier) · Off apex = m further out than your tightest apex here · Exit line = m inside (+) / outside (−) of your best lap 80 m after the apex.</td></tr></table>`;
+  $("#ctable").innerHTML=h}
+
+// ------------------------------------------------------------- HABITS
+let HB={corner:null,metric:"time",scope:"track"};
+const METRICS=[["time","Corner time (s)",3],["line.turn_in_m","LINE · Turn-in point (m vs apex marker, − = before)",0],["line.apex_geo_m","LINE · Apex point (m vs marker, − = earlier)",0],["line.min_speed_at_m","LINE · Slowest point (m vs marker)",0],["line.apex_gap_m","LINE · Distance off your tightest apex (m)",1],["line.off_exit","LINE · Exit line (m, + = inside vs best lap)",1],["min_speed","Minimum speed (km/h)",1],["brake_m","Brake point (m before apex)",0],["brake_peak","Brake peak (%)",0],["coast_m","Coasting (m)",0],["throttle_on_m","Throttle on (m after apex)",0],["full_throttle_m","Full throttle (m after apex)",0],["exit_speed","Exit speed (km/h)",1],["max_steer","Max steering",2],["bal_mid","Balance mid-corner (+ understeer)",2]];
+function lapVal(l,cid,k){if(k.startsWith("line."))return ((l.line||{})[cid]||{})[k.slice(5)]??null;return metricVal(l.corners[cid],k)}
+function metricVal(m,k){if(!m)return null;let v=m[k];if(v==null)return null;if(k=="brake_m")v=m.braking?-v:null;if(k=="brake_peak")v=m.braking?v*100:null;return v}
+async function rHabits(){
+  await loadCombo();
+  const laps=CL.laps.filter(l=>!l.pit),corners=[...CL.corners].sort((a,b)=>a.apex_m-b.apex_m);
+  if(!HB.corner||!corners.find(c=>c.id==HB.corner))HB.corner=corners[0]&&corners[0].id;
+  const recentN=Math.min(10,laps.length),recent=laps.slice(-recentN),earlyAll=laps.slice(0,Math.max(0,laps.length-recentN)),early=earlyAll.length>=5?earlyAll:[];
+  const rate=(ls,cid,h)=>{const ok=ls.filter(l=>l.corners[cid]);return ok.length?ok.filter(l=>(l.flags[cid]||[]).includes(h)).length/ok.length:null};
+  // overall ranking of habits (recent laps, all corners)
+  const tot=CL.habits.map(h=>{let n=0,k=0;recent.forEach(l=>corners.forEach(c=>{if(l.corners[c.id]){n++;if((l.flags[c.id]||[]).includes(h.id))k++}}));
+    let n2=0,k2=0;early.forEach(l=>corners.forEach(c=>{if(l.corners[c.id]){n2++;if((l.flags[c.id]||[]).includes(h.id))k2++}}));
+    const where=corners.map(c=>[c,rate(recent,c.id,h.id)]).filter(x=>x[1]>=0.5).map(x=>x[0].name);
+    return {...h,r:n?k/n:0,e:n2?k2/n2:null,where}}).filter(h=>h.r>0||h.e>0).sort((a,b)=>b.r-a.r);
+  await loadNotes();
+  $("#main").innerHTML=`
+  <div class="card noteslist"></div>
+  <div class="card"><h3>Lap times · all sessions here (${CL.car} · ${CL.track})</h3><div id="hb_laps"></div>
+    <div class="dim">Filled dot = valid, hollow = invalid. Shaded bands = sessions. Line = rolling median of 5.</div></div>
+  <div class="card"><h3>Your habits right now (last ${recentN} laps, all corners)${early.length?` · ▼ = better than your ${early.length} earlier laps`:" · trend arrows appear once you have 15+ laps here"}</h3>
+   ${tot.length?`<div class="habits">${tot.map(h=>`<div class="hab"><div class="hbar"><i style="width:${Math.round(h.r*100)}%;background:${h.r>.4?"var(--bad)":h.r>.2?"var(--warn)":"var(--good)"}"></i></div>
+     <div><b>${h.label}</b> <span class="mono">${Math.round(h.r*100)}%</span> ${h.e!=null?`<span class="${h.r<h.e-0.05?"good":h.r>h.e+0.05?"bad":"dim"}">${h.r<h.e-0.05?"▼":h.r>h.e+0.05?"▲":"="} was ${Math.round(h.e*100)}%</span>`:""}
+     <div class="dim">${h.why}${h.where.length?` <b>Mostly at: ${h.where.join(", ")}</b>`:""}</div></div></div>`).join("")}</div>`:"<div class='good'>No habits flagged.</div>"}</div>
+  <div class="card"><h3>Habit map · how often each habit shows up per corner (last ${recentN} laps)</h3><div class="tablewrap" id="hb_matrix"></div>
+   <div class="dim">Click a cell to see that corner's numbers lap by lap below.</div></div>
+  <div class="card"><h3>Corner trend</h3><div class="row"><select id="hb_c">${corners.map(c=>`<option value="${c.id}" ${c.id==HB.corner?"selected":""}>${cLab(c)} (${Math.round(c.apex_m)} m)</option>`).join("")}</select>
+    <select id="hb_m">${METRICS.map(m=>`<option value="${m[0]}" ${m[0]==HB.metric?"selected":""}>${m[1]}</option>`).join("")}</select>
+    <button onclick="openCornerCompare()">Compare best lap vs latest other lap at this corner →</button></div>
+    <div id="hb_trend"></div><div id="hb_detail"></div></div>
+  <div class="card"><h3>Habits across everything you drive (every track and car, per session)</h3><div id="hb_all"><span class="dim">loading…</span></div></div>`;
+  drawLapProgress(laps);drawMatrix(laps,corners,recent,early,rate);
+  $("#hb_c").onchange=e=>{HB.corner=e.target.value;drawCornerTrend()};$("#hb_m").onchange=e=>{HB.metric=e.target.value;drawCornerTrend()};
+  drawCornerTrend();drawHabitsAll();document.querySelectorAll(".noteslist").forEach(drawNotesList);
+}
+function sessionBands(laps){const b=[];laps.forEach((l,i)=>{if(!b.length||b[b.length-1].sid!=l.session)b.push({sid:l.session,a:i,b:i});else b[b.length-1].b=i});return b}
+function dotChart(el,o){ // simple index-based dot chart with hover
+  el.innerHTML=`<canvas></canvas><div class="dim tip"></div>`;const cv=el.querySelector("canvas"),tip=el.querySelector(".tip");
+  const draw=(hi)=>{const dpr=devicePixelRatio||1,W=cv.clientWidth||800,H=o.h||220;cv.width=W*dpr;cv.height=H*dpr;cv.style.height=H+"px";
+    const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);const pl=64,pr=12,pt=10,pb=26,w=W-pl-pr,h=H-pt-pb,n=o.y.length;
+    const vs=o.y.filter(v=>v!=null);if(!vs.length){c.fillStyle="#8b949e";c.fillText("no data",pl,pt+20);return}
+    let lo=Math.min(...vs),hi2=Math.max(...vs);if(hi2-lo<1e-6){lo-=1;hi2+=1}const p=(hi2-lo)*.08;lo-=p;hi2+=p;
+    const X=i=>pl+(n<2?w/2:i/(n-1)*w),Y=v=>pt+h-(v-lo)/(hi2-lo)*h;c.font="13px system-ui";
+    (o.bands||[]).forEach((bd,k)=>{c.fillStyle=k%2?"rgba(255,255,255,.035)":"rgba(53,199,255,.05)";const a=X(bd.a)-(n>1?w/(n-1)/2:20),b2=X(bd.b)+(n>1?w/(n-1)/2:20);c.fillRect(a,pt,b2-a,h);c.fillStyle="#9aa4ae";c.fillText(bd.label,Math.max(pl,a+4),H-6)});
+    for(let k=0;k<=4;k++){const v=lo+(hi2-lo)*k/4,y=Y(v);c.strokeStyle="#2a3138";c.beginPath();c.moveTo(pl,y);c.lineTo(W-pr,y);c.stroke();c.fillStyle="#9aa4ae";c.fillText(o.yfmt?o.yfmt(v):v.toFixed(o.dp??1),4,y+4)}
+    if(o.line){c.strokeStyle="#ff7a1a";c.lineWidth=2;c.beginPath();let on=false;o.line.forEach((v,i)=>{if(v==null)return;on?c.lineTo(X(i),Y(v)):c.moveTo(X(i),Y(v));on=true});c.stroke()}
+    o.y.forEach((v,i)=>{if(v==null)return;c.strokeStyle=c.fillStyle=(o.colors&&o.colors[i])||"#35c7ff";c.lineWidth=2;c.beginPath();c.arc(X(i),Y(v),i===hi?7:5,0,7);(o.hollow&&o.hollow[i])?c.stroke():c.fill()});
+    cv.onmousemove=e=>{const r=cv.getBoundingClientRect(),px=e.clientX-r.left;const i=Math.max(0,Math.min(n-1,Math.round((px-pl)/(w||1)*(n-1))));draw(i);tip.innerHTML=o.tip?o.tip(i):""};
+    cv.onclick=e=>{if(o.click){const r=cv.getBoundingClientRect(),px=e.clientX-r.left;o.click(Math.max(0,Math.min(n-1,Math.round((px-pl)/(w||1)*(n-1)))))}}};
+  draw(null)}
+function drawLapProgress(laps){
+  const ys=laps.map(l=>l.time),bands=sessionBands(laps).map(b=>({...b,label:sessLabel(b.sid)}));
+  const valid=laps.map(l=>l.valid),clean=ys.map((v,i)=>valid[i]?v:null);
+  dotChart($("#hb_laps"),{y:ys,h:240,yfmt:fmt,hollow:valid.map(v=>!v),line:rollMed(clean),bands,colors:laps.map(l=>CL.ref&&l.time==CL.ref.time?"#39d98a":"#35c7ff"),
+    tip:i=>{const l=laps[i];return `L${l.lap} · ${fmt(l.time)} · ${sessLabel(l.session)} run ${l.run}${l.valid?"":" · invalid"} · click to open in Compare`},
+    click:i=>{const l=laps[i];CMP.sel=[CL.ref.session+"~"+CL.ref.lap];if(lapKey(l)!=CMP.sel[0])CMP.sel.push(lapKey(l));CMP.zoom=null;go("Compare")}})}
+function drawMatrix(laps,corners,recent,early,rate){
+  const hs=CL.habits.filter(h=>corners.some(c=>rate(recent,c.id,h.id)>0||rate(early,c.id,h.id)>0));
+  if(!hs.length){$("#hb_matrix").innerHTML="<div class='good'>Nothing flagged.</div>";return}
+  $("#hb_matrix").innerHTML=`<table class="mx"><tr><th>Corner</th>${hs.map(h=>`<th title="${h.why}">${h.label}</th>`).join("")}</tr>
+  ${corners.map(c=>`<tr><td><b>${cLab(c)}</b> <span class="dim">${Math.round(c.apex_m)} m</span></td>${hs.map(h=>{const r=rate(recent,c.id,h.id),e=rate(early,c.id,h.id);
+    const a=r==null?0:r;return `<td class="mxc" style="background:rgba(255,92,92,${(a*0.75).toFixed(2)})" onclick="HB.corner='${c.id}';$('#hb_c').value='${c.id}';drawCornerTrend();$('#hb_c').scrollIntoView({behavior:'smooth'})">${r==null?"-":Math.round(r*100)+"%"}${e!=null&&r!=null&&Math.abs(r-e)>0.1?`<span class="${r<e?"good":"bad"}"> ${r<e?"▼":"▲"}</span>`:""}</td>`}).join("")}</tr>`).join("")}</table>`}
+function drawCornerTrend(){
+  const laps=CL.laps.filter(l=>!l.pit&&l.corners[HB.corner]);const mdef=METRICS.find(m=>m[0]==HB.metric);
+  const ys=laps.map(l=>lapVal(l,HB.corner,HB.metric));
+  const bands=sessionBands(laps).map(b=>({...b,label:sessLabel(b.sid)}));
+  dotChart($("#hb_trend"),{y:ys,h:240,dp:mdef[2],hollow:laps.map(l=>!l.valid),line:rollMed(ys),bands,
+    colors:laps.map(l=>(l.flags[HB.corner]||[]).length?"#ffc53d":"#35c7ff"),
+    tip:i=>{const l=laps[i],m=l.corners[HB.corner];return `L${l.lap} (${sessLabel(l.session)}) · ${mdef[1]}: <b>${f(ys[i],mdef[2])}</b> · flags: ${(l.flags[HB.corner]||[]).map(x=>CL.habits.find(h=>h.id==x).label).join(", ")||"none"} · click to compare with your best lap`},
+    click:i=>{const l=laps[i];CMP.sel=[CL.ref.session+"~"+CL.ref.lap];if(lapKey(l)!=CMP.sel[0])CMP.sel.push(lapKey(l));CMP.zoom=HB.corner;go("Compare")}});
+  // detail table
+  const c=CL.corners.find(x=>x.id==HB.corner);
+  $("#hb_detail").innerHTML=`<div class="dim" style="margin:6px 0">Yellow dots = a habit was flagged on that lap. Hollow = invalid lap.</div><div class="tablewrap"><table><tr><th>Lap</th><th>Session</th><th>Time</th><th>Brake m</th><th>Peak</th><th>Min km/h</th><th>Coast m</th><th>Thr on</th><th>Flat</th><th>Exit km/h</th><th>Steer</th><th>Lift at</th><th>Turn-in</th><th>Apex</th><th>Off apex m</th><th>Exit line</th><th>Flags</th></tr>
+   ${laps.slice().reverse().map(l=>{const m=l.corners[HB.corner];return `<tr class="${l.valid?"":"out"}"><td>${l.lap}</td><td>${sessLabel(l.session)}</td><td class="mono">${f(m.time,3)}</td><td>${m.braking?f(-m.brake_m,0):"-"}</td><td>${m.braking?f(m.brake_peak*100,0):"-"}</td><td>${f(m.min_speed,1)}</td><td>${f(m.coast_m,0)}</td><td>${f(m.throttle_on_m,0)}</td><td>${f(m.full_throttle_m,0)}</td><td>${f(m.exit_speed,1)}</td><td>${f(m.max_steer,2)}</td><td>${m.lift_at!=null?"+"+f(m.lift_at,0)+" m ("+Math.round(c.apex_m+m.lift_at)+" m)":"-"}</td>${(()=>{const q=(l.line||{})[HB.corner]||{};return `<td>${q.turn_in_m!=null?f(q.turn_in_m,0):"-"}</td><td>${q.apex_geo_m!=null?sgn(q.apex_geo_m,0):"-"}</td><td>${f(q.apex_gap_m,1)}</td><td>${q.off_exit!=null?sgn(q.off_exit,1):"-"}</td>`})()}<td style="text-align:left" class="warn">${(l.flags[HB.corner]||[]).map(x=>CL.habits.find(h=>h.id==x).label).join(", ")}</td></tr>`}).join("")}</table></div>`}
+function openCornerCompare(){const ref=CL.ref.session+"~"+CL.ref.lap;const laps=CL.laps.filter(l=>l.valid&&!l.pit&&lapKey(l)!=ref);const last=laps[laps.length-1];CMP.sel=[ref];if(last)CMP.sel.push(lapKey(last));CMP.zoom=HB.corner;go("Compare")}
+async function drawHabitsAll(){
+  const d=await J("/api/habits_all");if(!$("#hb_all"))return;const ss=d.sessions;
+  if(!ss.length){$("#hb_all").innerHTML="<span class='dim'>No sessions yet.</span>";return}
+  const hs=d.habits.filter(h=>ss.some(s=>s.rates[h.id]>0));
+  $("#hb_all").innerHTML=`<div class="dim">% of all corner passes with that habit. Compare columns left→right to see if a habit follows you from car to car.</div><div class="tablewrap"><table class="mx"><tr><th>Session</th><th>Track · car</th>${hs.map(h=>`<th title="${h.why}">${h.label}</th>`).join("")}</tr>
+  ${ss.slice().reverse().map(s=>`<tr><td>${(s.started||"").slice(5,16)}</td><td style="text-align:left">${s.track} ${s.variation.replace(" [R3E]"," (R3E)")} · ${s.car}</td>${hs.map(h=>{const v=s.rates[h.id]||0;return `<td style="background:rgba(255,92,92,${Math.min(.75,v/60).toFixed(2)})">${v?Math.round(v)+"%":"-"}</td>`}).join("")}</tr>`).join("")}</table></div>`}
+
+// ------------------------------------------------------------- TECHNIQUE
+function rTech(){
+  const clean=A.laps.filter(l=>l.valid&&!l.pit);
+  const keys=[["coast_m","Coasting per lap (m) — less is better"],["trail_pct","Trail-braked corners (%) — more is better"],["lockups","Lockups per lap"],["wheelspin_m","Wheelspin per lap (m)"],["lifts","Lifts after full throttle"],["countersteer","Corners with counter-steer"]];
+  const tt=A.technique_trend||{};
+  $("#main").innerHTML=`<div class="grid">${keys.map(([k,t],i)=>`<div class="card"><h3>${t}</h3><canvas id="t_${i}"></canvas>
+   <div class="dim">median ${f(tt[k]&&tt[k].median,1)} · <span class="pill ${tt[k]&&tt[k].direction}">${tt[k]&&tt[k].direction||"-"}</span></div></div>`).join("")}</div>
+   <div class="card" style="margin-top:12px"><h3>Corner-by-corner technique (typical of last 5 laps)</h3><div class="tablewrap"><table>
+   <tr><th>Corner</th><th>Brake m</th><th>Peak</th><th>Ramp s</th><th>Release</th><th>Trail m</th><th>Coast m</th><th>Min km/h</th><th>Thr on m</th><th>Full m</th><th>Spin m</th><th>Lockup laps</th><th>Lift laps</th></tr>
+   ${[...A.corners].sort((a,b)=>a.apex_m-b.apex_m).map(c=>{const m=c.typical_metrics||{};return `<tr><td>${c.name}</td><td>${m.braking?f(-m.brake_m,0):"-"}</td><td>${m.braking?f(m.brake_peak*100,0)+"%":"-"}</td><td>${f(m.brake_ramp_s,2)}</td>
+   <td class="${m.release_style=="trail"?"good":m.release_style?"warn":""}">${m.release_style||"-"}</td><td>${f(m.trail_m,0)}</td><td class="${(m.coast_m||0)>12?"warn":""}">${f(m.coast_m,0)}</td><td>${f(m.min_speed,1)}</td>
+   <td>${f(m.throttle_on_m,0)}</td><td>${f(m.full_throttle_m,0)}</td><td>${f(m.wheelspin_m,0)}</td><td class="${m.lockup_laps?"bad":""}">${m.lockup_laps||0}/${m.laps||0}</td><td>${m.lift_laps||0}/${m.laps||0}</td></tr>`}).join("")}
+   </table></div></div>
+   <div class="card" style="margin-top:12px"><h3>What the terms mean</h3><ul class="dim">
+    <li><b>Trail braking</b>: keeping some brake on past turn-in and bleeding it off towards the apex. Keeps weight on the front so the car turns.</li>
+    <li><b>On/off release</b>: brake goes from high to zero in a few metres before you turn. The front unloads and the car understeers.</li>
+    <li><b>Coasting</b>: neither pedal pressed. Time where the car is neither slowing efficiently nor accelerating.</li>
+    <li><b>Lockup</b>: a wheel turning ≥18% slower than the car for 3+ samples while braking (wheel radius is calibrated from your own straight-line data).</li>
+    <li><b>Wheelspin</b>: driven wheel ≥12% faster than the car while on throttle after the apex.</li>
+    <li><b>Lift</b>: throttle drops below 70% after you had reached full throttle on exit.</li></ul></div>`;
+  keys.forEach(([k],i)=>{const ys=clean.map(l=>l.technique[k]);
+    chart($("#t_"+i),{x:clean.map(l=>l.lap),h:140,series:[{y:ys,color:css("--a"),dots:true},{y:rollMed(ys),color:css("--accent"),width:2}]})});
+}
+
+// ------------------------------------------------------------- SETUP
+const SETUP_KEYS=["pressure_front","pressure_rear","brake_bias","brake_pressure","abs","tc","camber_front","camber_rear","toe_front","toe_rear","spring_front","spring_rear","arb_front","arb_rear","ride_front","ride_rear","bump_front","bump_rear","rebound_front","rebound_rear","wing_front","wing_rear","diff_power_ramp","diff_coast_ramp","diff_preload","engine_braking","final_drive"];
+function rSetup(){
+  const st=A.setup||{},sheet=st.sheet||{},vals=sheet.values||{};
+  const keys=[...new Set([...SETUP_KEYS,...Object.keys(vals)])];
+  const lastRun=Math.max(...A.laps.map(l=>l.run||1));
+  const bal=st.balance||{};
+  $("#main").innerHTML=`
+  <div class="card"><h3>Status</h3><b>${st.phase=="setup"?"Ready for setup work":"Driving first"}</b> — ${st.phase_note||""}</div>
+  <div class="card" style="margin-top:12px"><h3>Recommendations (from your data, ranked)</h3>
+   ${(st.recommendations||[]).length?st.recommendations.map((r,i)=>`<div class="rec">${i==0&&st.phase=="setup"?"<b>DO THIS ONE NEXT · </b>":""}<span class="dim">[${r.area}]</span> ${r.observation}<br><b>${r.change}</b><br><span class="dim">Why:</span> ${r.why} <span class="dim">Feel:</span> ${r.feel}</div>`).join(""):"<div class='dim'>Nothing stands out yet.</div>"}
+  </div>
+  <div class="grid" style="margin-top:12px">
+   <div class="card"><h3>Tyres · 2nd half of last run</h3><table><tr><th>Wheel</th><th>Hot bar</th><th>In</th><th>Mid</th><th>Out</th><th>In-Out</th><th>Carcass</th><th>Brake max</th></tr>
+    ${Object.entries(st.tyres||{}).map(([w,t])=>`<tr><td>${w}</td><td>${f(t.pressure_hot,2)}</td><td>${f(t.inner,0)}</td><td>${f(t.middle,0)}</td><td>${f(t.outer,0)}</td><td>${sgn(t.io_spread,1)}</td><td>${f(t.carcass,0)}</td><td>${f(t.brake_max,0)}</td></tr>`).join("")}</table>
+    <div class="dim">Profile: ${st.car_profile||"none (add a target in config.json → car_profiles)"} · lockups F ${st.lockups&&st.lockups.front} / R ${st.lockups&&st.lockups.rear} · fuel ${f(st.fuel_per_lap,2)} L/lap</div></div>
+   <div class="card"><h3>Balance (+ understeer / − oversteer)</h3><table><tr><th></th><th>Entry</th><th>Mid</th><th>Exit</th></tr>
+    ${["slow","fast"].map(s=>`<tr><td>${s} corners</td>${["entry","mid","exit"].map(p=>{const v=(bal[s+"_"+p]||{}).value;return `<td class="${v>0.15?"warn":v<-0.1?"bad":""}">${sgn(v,2)}</td>`}).join("")}</tr>`).join("")}</table>
+    <div class="dim">Steering needed per unit of path curvature vs the car's own low-grip reference. +0.20 = 20% more lock than neutral.</div></div>
+  </div>
+  <div class="card" style="margin-top:12px"><h3>Runs (stints) — did the change work?</h3><table><tr><th>Run</th><th>Laps</th><th>Best</th><th>Median</th><th>Δ median</th><th>Change made before this run</th></tr>
+   ${(A.run_comparison||[]).map(r=>`<tr><td>${r.run}</td><td>${r.laps}</td><td>${fmt(r.best)}</td><td>${fmt(r.median)}</td><td class="${r.median_delta<0?"good":r.median_delta>0?"bad":""}">${r.median_delta!=null?sgn(r.median_delta)+(r.significant?"":" (noise)"):"-"}</td><td style="text-align:left">${r.change||""}</td></tr>`).join("")}</table>
+   <div class="row" style="margin-top:8px">Log a change for run <input id="ch_run" type="number" value="${lastRun+1}" style="width:60px"> <input id="ch_txt" placeholder="e.g. brake bias 58 → 57" style="flex:1;min-width:220px"> <button onclick="logChange()">Add</button></div></div>
+  <div class="card" style="margin-top:12px"><h3>Current setup sheet (${A.session.car} @ ${A.session.track}) — the game doesn't expose setup values, so type them here and advice will say "from → to"</h3>
+   <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">${keys.map(k=>`<label class="dim">${k}<br><input data-k="${k}" value="${vals[k]??""}" style="width:100%"></label>`).join("")}</div>
+   <div class="row" style="margin-top:8px"><input id="newkey" placeholder="add another field"><button onclick="saveSetup()">Save setup</button></div></div>`;
+}
+async function saveSetup(){const v={};document.querySelectorAll("[data-k]").forEach(i=>{if(i.value!==""){const n=Number(i.value);v[i.dataset.k]=isNaN(n)?i.value:n}});
+  const nk=$("#newkey").value.trim();if(nk)v[nk]="";A=await post("/api/setup",{sid:SID,values:v});render()}
+async function logChange(){const t=$("#ch_txt").value.trim();if(!t)return;A=await post("/api/setup",{sid:SID,change:{run:Number($("#ch_run").value),text:t,when:new Date().toISOString()}});render()}
+
+// ------------------------------------------------------------- boot
+addEventListener("hashchange",()=>{const hs=hashState();if(hs.tab&&TABS.includes(hs.tab)){if(hs.tab=="Compare"){CMP.sel=[];CMP.zoom=null}if(hs.tab!=tab||hs.tab=="Compare")go(hs.tab)}});
+(async()=>{const hs=hashState();if(hs.tab&&TABS.includes(hs.tab))tab=hs.tab;
+  await loadSessions();
+  if(hs.laps){const sid=hs.laps.split(",")[0].split("~")[0];if([...$("#sess").options].some(o=>o.value==sid)){SID=sid;$("#sess").value=sid}}
+  tabs();await loadA();render();setInterval(poll,500);
+  let rt=null;addEventListener("resize",()=>{clearTimeout(rt);rt=setTimeout(()=>{if(tab=="Compare"&&CMP.group){CMP.group.draw()}else if(tab!="Live")render()},150)})})();
+</script>
+</body>
+</html>

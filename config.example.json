@@ -1,0 +1,25 @@
+{
+  "game": "auto",
+  "data_dir": "data",
+  "host": "127.0.0.1",
+  "port": 8770,
+  "sample_hz": 60,
+  "player_name": "",
+  "pressure_unit": "bar100",
+  "consistency_gate_s": 0.5,
+  "fast_corner_kmh": 120,
+  "understeer_threshold": 0.15,
+  "oversteer_threshold": -0.1,
+  "bottoming_mm": 8,
+  "open_browser": true,
+  "car_profiles": {
+    "GT3": {
+      "hot_pressure_bar": [1.8, 1.9],
+      "note": "Reiza staff guidance"
+    },
+    "Mini Cooper JCW": {
+      "hot_pressure_bar": { "front": [2.65, 2.75] },
+      "note": "Donington data: best laps at ~2.7 bar hot front"
+    }
+  }
+}
